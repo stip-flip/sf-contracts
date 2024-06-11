@@ -1,0 +1,11 @@
+{
+  "solidity.compileUsingRemoteVersion": "v0.8.6+commit.11564f7e",
+  "solidity.remappings": [
+    "@chainlink/=lib/chainlink/contracts/src/v0.8",
+    "@openzeppelin/=lib/openzeppelin-contracts",
+    "@solmate/=lib/solmate/src/",
+    "@uniswap/v3-periphery/=lib/v3-periphery/",
+    "@uniswap/v3-core/=lib/v3-core/",
+    "universal-router/=lib/universal-router/"
+  ]
+}
