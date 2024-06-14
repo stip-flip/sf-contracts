@@ -15,6 +15,15 @@ contract OracleTest is Test {
     //"EthereumClassic", "Bitcoin", "Ethereum", "Dogecoin", "Monero", "Solana", "Bnb", "Cardano"
     uint8[8] public decimals = [6, 4, 5, 7, 6, 6, 5, 7];
 
+    uint price0 = 38299;
+    uint price1 = 26137918;
+    uint price2 = 13631571;
+    uint price3 = 55993;
+    uint price4 = 6917182;
+    uint price5 = 5942855;
+    uint price6 = 2371857;
+    uint price7 = 167634;
+
     function setUp() public {
         console.log('setup');
         uint goerliFork = vm.createFork(vm.envString('RPC_MORDOR'));
@@ -58,44 +67,118 @@ contract OracleTest is Test {
         oracle.deposit{value: 0.1 ether}();
     }
 
+    // test an oracle for which initialised would be somewhere in the future
+    function testDelayedOracle() public {
+        // if the price is expected at a particular time, pass an offset
+        uint64 hour = uint64(Date.getHour(block.timestamp));
+        uint24 secondsSinceLastHour = uint24(block.timestamp % 3600);
+
+        delete drops;
+        // the round should start at 00:00 UTC, offset in hour
+        uint64 offset_ = hour * 3600;
+
+        offset_ += secondsSinceLastHour;
+        uint64 frequency = 24 hours;
+
+        uint64 delay = 6 days;
+        // substracting the frequency to make sure the 0 round is skipped
+        uint64 initialized = uint64(block.timestamp) - frequency - offset_;
+
+        console.log('initialised + delay', initialized + delay + frequency);
+        oracle = new Oracle(
+            decimals,
+            drops,
+            0,
+            initialized + delay,
+            24 hours, // 1 day frequency
+            1 hours, // 1 hour round duration
+            5 minutes, // 5 minutes delay for LP versus trader
+            0.1 ether,
+            'usd, bitcoin, ethereum, dogecoin, monero, solana, binancecoin, cardano, price comming from coingecko.com/, price expressed in ETC, except for ETC'
+        );
+
+        deal(vm.addr(1), 100 ether);
+
+        vm.startPrank(vm.addr(1));
+        // I should still be able to deposit
+        oracle.deposit{value: 1 ether}();
+
+        // but not withdraw (before the initialisation date)
+        vm.expectRevert();
+        oracle.withdraw(1 ether, vm.addr(1));
+
+        uint256 priceData = oracle.setSlots(
+            [
+                uint256(price0),
+                uint256(price1),
+                uint256(price2),
+                uint256(price3),
+                uint256(price4),
+                uint256(price5),
+                uint256(price6),
+                uint256(price7)
+            ]
+        );
+
+        // set price is also disabled before the initialisation date
+        vm.expectRevert();
+        oracle.setPrices(priceData, 1);
+
+        vm.warp(block.timestamp + delay - offset_);
+
+        oracle.setPrices(priceData, 1);
+
+        vm.expectRevert();
+        oracle.withdraw(1 ether, vm.addr(1));
+
+        vm.warp(block.timestamp + 2 days);
+
+        vm.expectRevert(abi.encodePacked('L'));
+        oracle.withdraw(1 ether, vm.addr(1));
+
+        vm.warp(block.timestamp + 2 days);
+
+        oracle.withdraw(1 ether, vm.addr(1));
+    }
+
     function testSetSlots() public {
         uint256 priceData = oracle.setSlots(
             [
-                uint256(2000 * 1e3),
-                uint256(25 * 1e6),
-                uint256(8277.35 * 1e3),
-                uint256(2211.65 * 1e3),
-                uint256(82.23 * 1e6),
-                uint256(1.6793 * 1e6),
-                uint256(6.5172 * 1e6),
-                uint256(4.52 * 1e6)
+                uint256(price0),
+                uint256(price1),
+                uint256(price2),
+                uint256(price3),
+                uint256(price4),
+                uint256(price5),
+                uint256(price6),
+                uint256(price7)
             ]
         );
 
         uint[8] memory slots_ = oracle.getSlots(priceData);
 
-        assertEq(slots_[0], 2000 * 1e3);
-        assertEq(slots_[1], 25 * 1e6);
-        assertEq(slots_[2], 8277.35 * 1e3);
-        assertEq(slots_[3], 2211.65 * 1e3);
-        assertEq(slots_[4], 82.23 * 1e6);
-        assertEq(slots_[5], 1.6793 * 1e6);
-        assertEq(slots_[6], 6.5172 * 1e6);
-        assertEq(slots_[7], 4.52 * 1e6);
+        assertEq(slots_[0], price0);
+        assertEq(slots_[1], price1);
+        assertEq(slots_[2], price2);
+        assertEq(slots_[3], price3);
+        assertEq(slots_[4], price4);
+        assertEq(slots_[5], price5);
+        assertEq(slots_[6], price6);
+        assertEq(slots_[7], price7);
         // assertEq(timestamp, 1);
     }
 
     function testSetPrice() public {
         uint256 priceData = oracle.setSlots(
             [
-                uint256(2000 * 1e6),
-                uint256(25 * 1e6),
-                uint256(8277.35 * 1e6),
-                uint256(2211.65 * 1e6),
-                uint256(82.23 * 1e6),
-                uint256(1.6793 * 1e6),
-                uint256(6.5172 * 1e6),
-                uint256(4.52 * 1e6)
+                uint256(price0),
+                uint256(price1),
+                uint256(price2),
+                uint256(price3),
+                uint256(price4),
+                uint256(price5),
+                uint256(price6),
+                uint256(price7)
             ]
         );
 
@@ -199,16 +282,7 @@ contract OracleTest is Test {
 
     function testFlip() public {
         uint256 priceData = oracle.setSlots(
-            [
-                uint(35799411 * (10 ** decimals[0])) / 1e9,
-                uint(2367542330095 * (10 ** decimals[1])) / 1e9,
-                uint(114216887371 * (10 ** decimals[2])) / 1e9,
-                uint(5670464 * (10 ** decimals[3])) / 1e9,
-                uint(4406433408 * (10 ** decimals[4])) / 1e9,
-                uint(5542511647 * (10 ** decimals[5])) / 1e9,
-                uint(21706807366 * (10 ** decimals[6])) / 1e9,
-                uint(18391314 * (10 ** decimals[7])) / 1e9
-            ]
+            [price0, price1, price2, price3, price4, price5, price6, price7]
         );
 
         vm.warp(block.timestamp + offset);
