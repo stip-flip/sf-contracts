@@ -135,7 +135,6 @@ contract Synth is ISynth, IERC20 {
         oracle = IOracleView(oracle_);
         oracleSlot = oracleSlot_;
 
-        //@todo see if we should rather check the block, as timestamp can easily be manipulated
         slot2.lastUpdate = uint64(block.timestamp);
         slot2.lastPrice = getPrice();
 
