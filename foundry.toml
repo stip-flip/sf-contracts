@@ -7,19 +7,8 @@ libs = ['lib']
 fs_permissions = [{ access = "read-write", path = "./" }]
 
 
-remappings = [
-  "@chainlink/=lib/chainlink/contracts/src/v0.8/",
-  "@solmate/=lib/solmate/src/",
-  '@openzeppelin/=lib/openzeppelin-contracts/',
-]
+remappings = ['@openzeppelin/=lib/openzeppelin-contracts/']
 
 
 [rpc_endpoints]
-goerli = "${RPC_GOERLI}"
-sepolia = "${RPC_SEPOLIA}"
 mordor = "${RPC_MORDOR}"
-
-[etherscan]
-goerli = { key = "${ETHERSCAN_API_KEY}" }
-sepolia = { key = "${ETHERSCAN_API_KEY}" }
-mordor = { key = "${BLOCKSCOUT_API_KEY}" }
