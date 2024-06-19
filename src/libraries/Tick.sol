@@ -149,35 +149,26 @@ library Tick {
         bool enter
     ) internal view returns (uint128) {
         Tick.Info storage info = self[tick];
-        uint liquidityRAY = FixedPointMathLib.mulDivDown(
+        uint liquidity = FixedPointMathLib.mulDivDown(
             info.netShares,
             sharesRatio,
-            1
-        );
-        uint liquidity0RAY = FixedPointMathLib.mulDivUp(
-            liquidityRAY,
-            tickRatio,
             RAY
         );
-        uint liquidityMovedRAY = uint(liquidityMoved) * RAY;
+        uint liquidity0 = FixedPointMathLib.mulDivUp(liquidity, tickRatio, RAY);
         if (enter) {
             return
                 FixedPointMathLib
-                    .mulDivUp(
-                        liquidity0RAY + liquidityMovedRAY,
-                        RAY,
-                        liquidityRAY
-                    )
+                    .mulDivUp(liquidity0 + liquidityMoved, RAY, liquidity)
                     .u128();
         } else {
             return
                 FixedPointMathLib
                     .mulDivUp(
-                        liquidity0RAY > liquidityMovedRAY
-                            ? liquidity0RAY - liquidityMovedRAY
+                        liquidity0 > liquidityMoved
+                            ? liquidity0 - liquidityMoved
                             : 0,
                         RAY,
-                        liquidityRAY
+                        liquidity
                     )
                     .u128();
         }
