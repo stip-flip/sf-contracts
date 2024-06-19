@@ -23,9 +23,13 @@ contract CryptoOracleScript is Script {
         );
 
         vm.startBroadcast();
+
+        uint8[8] memory orders = [4, 7, 7, 4, 6, 6, 6, 5];
+
         /// all "crypto" prices expressed in ETC
         Oracle cryptoOracle = new Oracle(
             [6, 4, 5, 7, 6, 6, 5, 7],
+            orders,
             drops,
             0,
             uint64(block.timestamp),

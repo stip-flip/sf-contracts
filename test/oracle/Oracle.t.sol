@@ -13,16 +13,18 @@ contract OracleTest is Test {
 
     uint24 offset;
     //"EthereumClassic", "Bitcoin", "Ethereum", "Dogecoin", "Monero", "Solana", "Bnb", "Cardano"
-    uint8[8] public decimals = [6, 4, 5, 7, 6, 6, 5, 7];
+    uint8[8] public decimals = [7, 2, 3, 8, 5, 5, 4, 7];
 
-    uint price0 = 38299;
-    uint price1 = 26137918;
-    uint price2 = 13631571;
-    uint price3 = 55993;
-    uint price4 = 6917182;
-    uint price5 = 5942855;
-    uint price6 = 2371857;
-    uint price7 = 167634;
+    uint8[8] public magnitudes = [5, 5, 5, 5, 5, 5, 5, 5];
+
+    uint price0 = 395256;
+    uint price1 = 263803;
+    uint price2 = 137066;
+    uint price3 = 557310;
+    uint price4 = 679207;
+    uint price5 = 581974;
+    uint price6 = 237074;
+    uint price7 = 166363;
 
     function setUp() public {
         console.log('setup');
@@ -52,6 +54,7 @@ contract OracleTest is Test {
 
         oracle = new Oracle(
             decimals,
+            magnitudes,
             drops,
             7,
             uint64(block.timestamp) - 24 hours + offset,
@@ -80,13 +83,14 @@ contract OracleTest is Test {
         offset_ += secondsSinceLastHour;
         uint64 frequency = 24 hours;
 
-        uint64 delay = 6 days;
+        uint64 delay = 5 days;
         // substracting the frequency to make sure the 0 round is skipped
         uint64 initialized = uint64(block.timestamp) - frequency - offset_;
 
         console.log('initialised + delay', initialized + delay + frequency);
         oracle = new Oracle(
             decimals,
+            magnitudes,
             drops,
             0,
             initialized + delay,
@@ -247,6 +251,7 @@ contract OracleTest is Test {
     function testCryptoOracle() public {
         Oracle cryptoOracle = new Oracle(
             [3, 3, 3, 8, 4, 4, 4, 8],
+            magnitudes,
             drops,
             0,
             0,
@@ -304,6 +309,7 @@ contract OracleTest is Test {
             assertLt(p, max32Price, 'stip price < 2^32 / 100');
 
             console.log('stip price', p);
+            // console.log('binary digits', oracle.orderOfMagnitude(uint32(p)));
 
             p = oracle.lastPrice(i, true, IOracleView.Leverage.SQUARED);
 

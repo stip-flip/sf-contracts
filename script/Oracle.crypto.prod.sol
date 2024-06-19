@@ -39,11 +39,14 @@ contract CryptoOracleScript is Script {
         // substracting the frequency to make sure the 0 round is skipped
         uint64 initialized = uint64(block.timestamp) - frequency - offset;
 
+        uint8[8] memory magnitudes = [5, 5, 5, 5, 5, 5, 5, 5];
+
         Oracle cryptoOracle = new Oracle(
-            [6, 4, 5, 7, 6, 6, 5, 7],
+            [7, 2, 3, 8, 5, 5, 4, 7],
+            magnitudes,
             drops,
             0,
-            initialized,
+            initialized + 5 days,
             24 hours, // 1 day frequency
             1 hours, // 1 hour round duration
             5 minutes, // 5 minutes delay for LP versus trader
@@ -52,7 +55,7 @@ contract CryptoOracleScript is Script {
         );
 
         // be the first staker
-        cryptoOracle.deposit{value: 1 ether}();
+        // cryptoOracle.deposit{value: 1 ether}();
 
         vm.writeLine(path, 'CRYPTO_ORACLE_PROD: ');
         vm.writeLine(path, addressToString(address(cryptoOracle)));

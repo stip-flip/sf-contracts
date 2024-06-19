@@ -39,8 +39,11 @@ contract OracleRewardTest is Test {
 
         console.log('initialized', initialized, uint64(block.timestamp));
 
+        uint8[8] memory orders = [4, 6, 7, 4, 6, 6, 6, 5];
+
         oracle = new Oracle(
             [6, 3, 3, 8, 4, 4, 4, 8],
+            orders,
             drops,
             0, // ignore modulo if there is no drops
             initialized,

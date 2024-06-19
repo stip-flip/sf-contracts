@@ -23,6 +23,7 @@ contract Oracle is IOracle, IOracleEvents {
     uint internal constant SLOT_7_MASK = 0x00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
 
     uint8[8] internal _decimals;
+    uint8[8] internal _magnitudes;
 
     /// @notice drops are used to drop some round, for example, if the frequency is daily, but saturday and sunday does not
     /// have any price, the drops 6 and 7 would be passed in, with a modulo of 7 (week)
@@ -64,16 +65,17 @@ contract Oracle is IOracle, IOracleEvents {
 
     modifier onlyEOA() {
         // @todo remove this modifier for testing
-        if (tx.origin == 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38) {
-            _;
-            return;
-        }
+        // if (tx.origin == 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38) {
+        //     _;
+        //     return;
+        // }
         require(msg.sender == tx.origin, 'EOA');
         _;
     }
 
     /// @notice the constructor of the oracle, the oracle is initialized with a set of parameters
     /// @param decimals_ the number of decimals for each slot
+    /// @param magnitudes_ the order of magnitude expected for each price, for example, if the price is 1000, the order is 3, useful for leverage and flip price calculations
     /// @param drops_ the drops, for example, if the frequency is daily, and we want to skip saturday and sunday, we would pass [6, 7]
     /// @param modulo_ the modulo of the oracle, for example, if the frequency is daily, the modulo would be 7 for a week
     /// @param initialized_ the timestamp at which the oracle was initialized, when is round 0 starting
@@ -83,6 +85,7 @@ contract Oracle is IOracle, IOracleEvents {
     /// @param description_ the description of the oracle, where and when the data is coming from
     constructor(
         uint8[8] memory decimals_,
+        uint8[8] memory magnitudes_,
         uint8[] memory drops_,
         uint8 modulo_,
         uint64 initialized_,
@@ -93,6 +96,7 @@ contract Oracle is IOracle, IOracleEvents {
         string memory description_
     ) {
         _decimals = decimals_;
+        _magnitudes = magnitudes_;
         frequency = frequency_;
         _drops = drops_;
         _modulo = modulo_;
@@ -223,15 +227,15 @@ contract Oracle is IOracle, IOracleEvents {
         price = lastPrice(slot);
         // useful one off casting for calculations
         uint p = uint(price);
-        uint8 decimals = _decimals[slot];
+
         if (leverage == Leverage.SQUARED) {
-            price = uint64((p * p) / 10 ** (12 - decimals));
+            price = uint64((p * p) / 10 ** _magnitudes[slot]);
         }
         if (leverage == Leverage.CUBED) {
-            price = uint64((p * p * p) / 10 ** ((12 - decimals) * 2));
+            price = uint64((p * p * p) / 10 ** (_magnitudes[slot] * 2));
         }
         if (!long) {
-            price = uint64(10 ** (18 - decimals) / uint(price));
+            price = uint64(10 ** ((_magnitudes[slot] + 1) * 2) / uint(price));
         }
     }
 
@@ -283,9 +287,10 @@ contract Oracle is IOracle, IOracleEvents {
     }
 
     /// @notice set the price for a given round, the round argument is used to avoid having the transaction
-    /// @dev since the deposit is protected via onlyEOA, setPrices cannot be used by non EOA accounts
-    /// stuck in the synth for too long, if it is the case, the setPrices would revert rather
+    /// stuck in the pool for too long, if it is the case, the setPrices would revert rather
     /// than submitting a wrong price at the wrong round
+    /// @dev since the deposit is protected via onlyEOA, setPrices cannot be used by non EOA accounts
+
     function setPrices(uint256 prices_, uint64 round) public override {
         // make sure the transaction was not late, revert otherwise
         require(round != 0, 'OB');
