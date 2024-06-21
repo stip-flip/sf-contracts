@@ -46,8 +46,8 @@ The first synthetics available on S&F will come from this Oracle and Synth facto
 
 | Contract Name | MORDOR                                     | ETHER CLASSIC                              |
 | ------------- | ------------------------------------------ | ------------------------------------------ |
-| Oracle        | 0x5FbDB2315678afecb367f032d93F642f64180aa3 | 0x5FbDB2315678afecb367f032d93F642f64180aa3 |
-| Synth Factory | 0x8f3Cf7ad23Cd3Ca8d1fF675d5f0b4d4aC5b0A1a1 | 0x5FbDB2315678afecb367f032d93F642f64180aa3 |
+| Oracle        | 0x5FbDB2315678afecb367f032d93F642f64180aa3 | 0x4AC635E92801e657F44BDEfcc7660Ea1431DF846 |
+| Synth Factory | 0x8f3Cf7ad23Cd3Ca8d1fF675d5f0b4d4aC5b0A1a1 | 0xf0d2a38195d1e31eeea26a194f25a189a8ae4442 |
 
 ## License
 
